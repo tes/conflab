@@ -13,6 +13,10 @@ var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });
 
+/**
+ * Core class
+ *  - no construction options, all passed via config or env variables
+ */
 function Config() {
 }
 
@@ -36,6 +40,7 @@ Config.prototype.load = function() {
     self.events = new EventEmitter();
 
     // Local configs
+    self.fileContent = {};
     self.fileConfig = {};
     self.etcdConfig = {};
     self.config = {};
@@ -52,15 +57,41 @@ Config.prototype.load = function() {
 
 }
 
+/**
+ * Load configuration from files and then from etcd if appropriate
+ */
 Config.prototype.loadConfig = function(next) {
 
     var self = this;
     self.loadFromFiles(function() {
         self.loadFromEtcd(function() {
             self.mergeConfig();
-            next();
+            self.putFilesInEtcd(next);
         });
     });
+
+}
+
+/**
+ * Copy file content over to keys in etcd
+ * This enables admin tools to display what is in the files
+ * that are running.  It is brought up to date whenever the app
+ * is started, no need to update in any other circumstance (so no ttl);
+ */
+Config.prototype.putFilesInEtcd = function(next) {
+
+    var self = this;
+    if(!self.etcd) return next();
+
+    var loadFile = function(file, cb) {
+        var fileJson = self.fileContent[file];
+        var etcdKey = path.join(self.etcdKey,'_files',environment,file);
+        self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
+    }
+
+    async.map(_.keys(self.fileContent),loadFile, function(err) {
+        next();
+    })
 
 }
 
@@ -161,22 +192,21 @@ Config.prototype.loadFromFiles = function(next) {
 
     // Order here matters, last one always wins
     var configFiles = [
-        path.join(self.configPath, 'default.json'),
-        path.join(self.configPath, self.environment + '.json'),
-        path.join(self.configPath, 'runtime.json'),
-        path.join(self.configPath, hostname + '.json')
+        {path: path.join(self.configPath, 'default.json'), name: 'default'},
+        {path: path.join(self.configPath, self.environment + '.json'), name: 'environment'},
+        {path: path.join(self.configPath, 'runtime.json'), name: 'runtime'},
+        {path: path.join(self.configPath, hostname + '.json'), name: 'hostname-' + hostname}
     ];
 
     async.mapSeries(configFiles, self.loadFile.bind(self), next);
 }
 
-Config.prototype.loadFile = function(filename, next) {
+Config.prototype.loadFile = function(file, next) {
 
     var self = this;
-
-    fs.exists(filename, function (exists) {
+    fs.exists(file.path, function (exists) {
       if(!exists) { return next(); }
-      fs.readFile(filename, function (err, data) {
+      fs.readFile(file.path, function (err, data) {
         if(err) { return next(); }
         var jsonData;
         try {
@@ -184,6 +214,8 @@ Config.prototype.loadFile = function(filename, next) {
         } catch(ex) {
             return next();
         }
+        // Save the content for later and reload
+        self.fileContent[file.name] = jsonData;
         self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
         return next();
       });
