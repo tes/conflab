@@ -3,7 +3,6 @@
 var fs = require('fs');
 var path = require('path');
 var hostname = require('os').hostname().replace(/\..*/, '');
-var environment = process.env.NODE_ENV || "development";
 var async = require('async');
 var Etcd = require('node-etcd');
 var EventEmitter = require('events').EventEmitter;
@@ -85,7 +84,7 @@ Config.prototype.putFilesInEtcd = function(next) {
 
     var loadFile = function(file, cb) {
         var fileJson = self.fileContent[file];
-        var etcdKey = path.join(self.etcdKey,'_files',environment,file);
+        var etcdKey = path.join(self.etcdKey, '_files', self.environment, file);
         self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
     }
 
