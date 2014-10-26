@@ -31,6 +31,7 @@ Config.prototype.load = function() {
     if(self.done) return self.config;
 
     // This is the configuration that comes from the application it is included in
+    self.libraryPath = path.join(__dirname, 'config');
     self.configPath = process.env.CONFIG || path.join(process.cwd(), 'config');
     self.prefix = '/conflab';
 
@@ -191,6 +192,7 @@ Config.prototype.loadFromFiles = function(next) {
 
     // Order here matters, last one always wins
     var configFiles = [
+        {path: path.join(self.libraryPath, 'default.json'), name: 'library'},
         {path: path.join(self.configPath, 'default.json'), name: 'default'},
         {path: path.join(self.configPath, self.environment + '.json'), name: 'environment'},
         {path: path.join(self.configPath, 'runtime.json'), name: 'runtime'},
