@@ -9,7 +9,7 @@ var Etcd = require('node-etcd');
 var fileConfig = require(path.join(__dirname,'etcd','default.json'));
 var etcd = new Etcd(fileConfig.etcd.host || '127.0.0.1', fileConfig.etcd.port || '4001');
 
-process.env.CONFIG = path.join(__dirname,'etcd');
+process.env.CONFLAB_CONFIG = path.join(__dirname,'etcd');
 
 describe('Config etcd module', function() {
 

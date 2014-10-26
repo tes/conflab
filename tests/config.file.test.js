@@ -6,8 +6,7 @@ var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
 
-
-process.env.CONFIG = path.join(__dirname,'file');
+process.env.CONFLAB_CONFIG = path.join(__dirname,'file');
 
 describe('Config file module', function() {
 

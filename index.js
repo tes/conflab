@@ -31,8 +31,8 @@ Config.prototype.load = function() {
     if(self.done) return self.config;
 
     // This is the configuration that comes from the application it is included in
-    self.libraryPath = path.join(__dirname, 'config');
-    self.configPath = process.env.CONFIG || path.join(process.cwd(), 'config');
+    self.libraryPath = process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
+    self.configPath = process.env.CONFLAB_CONFIG || path.join(process.cwd(), 'config');
     self.prefix = '/conflab';
 
     // Otherwise lets load up
@@ -98,11 +98,11 @@ Config.prototype.putFilesInEtcd = function(next) {
 Config.prototype.mergeConfig = function() {
 
     var self = this;
-    self.config = {};
+    self.config = {_:{}};
     self.config = defaultsDeep(self.fileConfig, self.config);
     self.config = defaultsDeep(self.etcdConfig, self.config);
-    self.config.on = self.events.on.bind(self.events);
-    self.config.stop = self.watcher ? self.watcher.stop.bind(self.watcher) : function() {};
+    self.config._.on = self.events.on.bind(self.events);
+    self.config._.stop = self.watcher ? self.watcher.stop.bind(self.watcher) : function() {};
 
 }
 
