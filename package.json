@@ -1,0 +1,25 @@
+{
+  "name": "conflab",
+  "version": "0.0.1",
+  "description": "A configuration library that probably does more than it should.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tes/conflab.git"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test mocha tests/*.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "async": "^0.9.0",
+    "deasync": "0.0.7",
+    "lodash": "^2.4.1",
+    "node-etcd": "^3.0.0"
+  },
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "jshint": "^2.5.5",
+    "mocha": "^2.0.1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+    "serviceKey2":"environment",
+    "sharedTestKey":"service",
+    "serviceKey":"environment",
+    "serviceKeyEnv":"environment",
+    "k1":{
+        "a2":"Adios"
+    }
+}
