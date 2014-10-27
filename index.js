@@ -172,6 +172,7 @@ Config.prototype.loadFromFiles = function(next) {
         {path: path.join(self.configPath, hostname + '.json'), name: 'hostname-' + hostname}
     ];
 
+
     async.mapSeries(configFiles, self.loadFile.bind(self), next);
 }
 
