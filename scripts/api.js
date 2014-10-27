@@ -1,8 +1,12 @@
 
+/**
+ * Simple script to demonstrate interaction with api
+ */
+
 var path = require('path');
 process.env.CONFLAB_CONFIG = path.join(__dirname,'..','tests','etcd');
 var config = require('..');
-var capi = require('../Api');
+var capi = require('../api');
 var async = require('async');
 
 capi.getServices(function(err, services) {

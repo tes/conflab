@@ -3,9 +3,9 @@
  * that allow you to build a UI - do not require if not necessary
  * The key is to not expose the UI to the bad etcd interface
  */
-var config = require('./');
+var config = require('../');
 var _ = require('lodash');
-var utils = require('./lib/utils');
+var utils = require('../lib/utils');
 
 module.exports = {
     getServices: function(next) {

@@ -8,7 +8,7 @@
     "url": "https://github.com/tes/conflab.git"
   },
   "scripts": {
-    "test": "NODE_ENV=test mocha tests/config.file.test.js",
+    "test": "NODE_ENV=test mocha tests/*.js",
     "test-etcd": "NODE_ENV=test mocha tests/config.etcd.test.js"
   },
   "license": "MIT",
