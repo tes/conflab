@@ -8,7 +8,6 @@ var Etcd = require('node-etcd');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var utils = require('./lib/utils');
-
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });

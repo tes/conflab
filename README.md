@@ -30,6 +30,8 @@ object around your code which makes it a bit cluttered.
 
 Adding any configuration into etcd (if configured) will trump configuration included in the services themselves.
 
+This allows you to selectively over-ride any configuration at run time by adding keys into etcd.
+
 For the etcd option to work, one of the earlier files must have included etcd connection information:
 
 ```
@@ -41,12 +43,53 @@ For the etcd option to work, one of the earlier files must have included etcd co
 }
 ```
 
+### Key structure
+
+The keys in etcd are structured follows:
+
+```
+/conflab/<service-name>/_etcd/<environment>/key/path = value
+```
+
+Where:
+
+service-name:  the name of the service from its package.json
+environment:  the name of the environment
+
+This will over-ride the configuration:
+
+```
+{
+    "key":{
+        "path": "value"
+    }
+}
+```
+
 ### Listening for changes
 
 The only additional helper added to the config object is a 'listen', that allows you to register a listener that will be informed if the configuration changes (e.g. someone updates) an etcd key.
 
-If you don't use etcd then ignore this step.
+```
+var config = require('..');
+config._.on('change', function() {
+    console.log('Config Changed');
+})
+```
 
-### Etcd
+If you don't use etcd then ignore this step.  If you use etcd, any changes to the configuration defined in etcd keys will be immediately reflected when a key is updated in etcd.
 
-If you use etcd, any changes to the configuration defined in etcd keys.
+### File configuration
+
+To aid in the development of an administration screen, when an application starts up it copies its configuration from each of the local configuration files (if they exist in the environment it is running into) up into etcd (if it is configured):
+
+```
+/conflab/<service-name>/_files/<environment>/lib-default
+/conflab/<service-name>/_files/<environment>/lib-environment
+/conflab/<service-name>/_files/<environment>/default
+/conflab/<service-name>/_files/<environment>/environment
+/conflab/<service-name>/_files/<environment>/runtime
+/conflab/<service-name>/_files/<environment>/hostname-<host>
+```
+
+This is done so that you can show the config coming from the application source code alongside any over-rides specified in etcd.
