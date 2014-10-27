@@ -7,14 +7,14 @@ var async = require('async');
 var Etcd = require('node-etcd');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
+var utils = require('./lib/utils');
 
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });
 
 /**
- * Core class
- *  - no construction options, all passed via config or env variables
+ * Core class - no construction options, all passed via config or env variables
  */
 function Config() {
 }
@@ -85,7 +85,7 @@ Config.prototype.putFilesInEtcd = function(next) {
 
     var loadFile = function(file, cb) {
         var fileJson = self.fileContent[file];
-        var etcdKey = path.join(self.etcdKey, '_files', self.environment, file);
+        var etcdKey = path.join(self.etcdKeyBase, '_files', self.environment, file);
         self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
     }
 
@@ -95,6 +95,10 @@ Config.prototype.putFilesInEtcd = function(next) {
 
 }
 
+/**
+ * Merge the file and etcd config together with helpers, this is done
+ * to allow the etcd config to change without reloading files.
+ */
 Config.prototype.mergeConfig = function() {
 
     var self = this;
@@ -102,63 +106,28 @@ Config.prototype.mergeConfig = function() {
     self.config = defaultsDeep(self.fileConfig, self.config);
     self.config = defaultsDeep(self.etcdConfig, self.config);
     self.config._.on = self.events.on.bind(self.events);
+    self.config._.etcd = self.etcd;
     self.config._.stop = self.watcher ? self.watcher.stop.bind(self.watcher) : function() {};
 
 }
 
+/**
+ * Load config from etcd - fails silently if no etcd config defined in files
+ */
 Config.prototype.loadFromEtcd = function(next) {
 
     var self = this;
 
-    var processValue = function(value) {
-        if(value === 'false') return false;
-        if(value === 'true') return true;
-        if(isNaN(value)) return value;
-        return +value;
-    }
-
     var parseConfig = function(node, cb) {
 
-        var updateConfig = function(action, fullKey, newValue) {
-            var obj = {}, keys = fullKey.split("/"), key, isLast, currObj = self.etcdConfig;
-            while(keys.length > 0) {
-                key = keys.shift(), isLast = keys.length > 0 ? false : true;
-                if(isLast) {
-                    if(newValue) {
-                        currObj[key] = processValue(newValue);
-                    } else {
-                        delete currObj[key];
-                    }
-                } else {
-                    if(!currObj[key]) currObj[key] = {}
-                    currObj = currObj[key];
-                }
-            }
-            self.mergeConfig();
-        }
-
-        var jsonData = {};
-        var createConfig = function(parentKey, nodes, jsonData) {
-            nodes.forEach(function(currentNode) {
-                var key = currentNode.key.replace(parentKey + '/','');
-                if(currentNode.nodes) {
-                    jsonData[key] = {};
-                    createConfig(currentNode.key, currentNode.nodes, jsonData[key]);
-                } else {
-                    jsonData[key] = processValue(currentNode.value);
-                }
-            });
-        }
-
-        if(node.nodes) createConfig(node.key, node.nodes, jsonData);
-
-        self.etcdConfig = defaultsDeep(jsonData, self.etcdConfig);
+        self.etcdConfig = defaultsDeep(utils.objFromNode(node), self.etcdConfig);
 
         // Configure the watcher
         self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
         self.watcher.on('change', function(config) {
             var key = config.node.key.replace(self.etcdKey + '/','');
-            updateConfig(config.action, key, config.node.value);
+            utils.index(self.etcdConfig, key, config.action, config.node.value)
+            self.mergeConfig();
             self.events.emit('change');
         });
 
@@ -171,7 +140,8 @@ Config.prototype.loadFromEtcd = function(next) {
     // Etcd needs a service name to create the key
     var packageJson = path.join(process.cwd(), 'package.json');
     if(fs.existsSync(packageJson)) {
-       self.etcdKey = self.prefix + "/" + require(packageJson).name;
+       self.etcdKeyBase = self.prefix + "/" + require(packageJson).name;
+       self.etcdKey = self.etcdKeyBase + '/_etcd/' + self.environment;
     } else {
         console.log('[CONFLAB] Error: You cant use etcd in a service without a name in the package.json');
         return next();
@@ -186,13 +156,17 @@ Config.prototype.loadFromEtcd = function(next) {
 
 }
 
+/**
+ * Load config from files, order defined here is important.
+ */
 Config.prototype.loadFromFiles = function(next) {
 
     var self = this;
 
     // Order here matters, last one always wins
     var configFiles = [
-        {path: path.join(self.libraryPath, 'default.json'), name: 'library'},
+        {path: path.join(self.libraryPath, 'default.json'), name: 'lib-default'},
+        {path: path.join(self.libraryPath, self.environment + '.json'), name: 'lib-environment'},
         {path: path.join(self.configPath, 'default.json'), name: 'default'},
         {path: path.join(self.configPath, self.environment + '.json'), name: 'environment'},
         {path: path.join(self.configPath, 'runtime.json'), name: 'runtime'},
@@ -202,6 +176,9 @@ Config.prototype.loadFromFiles = function(next) {
     async.mapSeries(configFiles, self.loadFile.bind(self), next);
 }
 
+/**
+ * Load a specific file into the fileConfig
+ */
 Config.prototype.loadFile = function(file, next) {
 
     var self = this;
@@ -224,5 +201,8 @@ Config.prototype.loadFile = function(file, next) {
 
 }
 
+/**
+ * Export an already loaded singleton
+ */
 var config = new Config();
 module.exports = config.load();

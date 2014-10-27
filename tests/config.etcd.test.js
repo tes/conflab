@@ -16,12 +16,10 @@ describe('Config etcd module', function() {
     var config;
 
     before(function(done) {
-        etcd.rmdir("/conflab", { recursive: true }, function(err) {
-            etcd.mkdir("/conflab/conflab", function(err) {
-                etcd.set("/conflab/conflab/ekey1", "value", function() {
-                    // Can't load config in here as it seems to screw with mocha
-                    done();
-                });
+        etcd.rmdir("/conflab/conflab/_etcd/test", { recursive: true }, function(err) {
+            etcd.set("/conflab/conflab/_etcd/test/ekey1", "value", function() {
+                // Can't load config in here as it seems to screw with mocha
+                done();
             });
         });
     });
@@ -34,7 +32,7 @@ describe('Config etcd module', function() {
 
     it('should update if etcd configuration changed', function(done) {
         config = require('..');
-        etcd.set("/conflab/conflab/ekey1", "value2", function() {
+        etcd.set("/conflab/conflab/_etcd/test/ekey1", "value2", function() {
             expect(config.ekey1).to.be('value2');
             expect(config.k1.k2.k3).to.be('Hola');
             done();
@@ -43,7 +41,7 @@ describe('Config etcd module', function() {
 
     it('should over-write if etcd added for node in file', function(done) {
         config = require('..');
-        etcd.set("/conflab/conflab/k1/k2/k3", "Gracias", function() {
+        etcd.set("/conflab/conflab/_etcd/test/k1/k2/k3", "Gracias", function() {
             expect(config.k1.k2.k3).to.be('Gracias');
             done();
         });
@@ -51,7 +49,7 @@ describe('Config etcd module', function() {
 
     it('should reset back to file default if etcd removed for node in file', function(done) {
         config = require('..');
-        etcd.rmdir("/conflab/conflab/k1", {recursive: true}, function() {
+        etcd.rmdir("/conflab/conflab/_etcd/test/k1", {recursive: true}, function() {
             expect(config.k1.k2.k3).to.be('Hola');
             done();
         });
