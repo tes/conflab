@@ -50,13 +50,23 @@ module.exports = {
             next(null, {service: service, environment: environment, file: file, config: JSON.parse(data.node.value)});
         });
     },
+    getServiceEnvironmentMergedConfig: function(service, environment, next) {
+        var etcd = config._.etcd;
+        if(!etcd) return next(new Error('Etcd not available'));
+        var key = '/conflab/' + service + '/_merged/' + environment;
+        etcd.get(key, function(err, data) {
+            if(err) return next(err);
+            next(null, {service: service, environment: environment, config: JSON.parse(data.node.value)});
+        });
+    },
     getServiceEnvironmentEtcdConfig: function(service, environment, next) {
         var etcd = config._.etcd;
         if(!etcd) return next(new Error('Etcd not available'));
         var key = '/conflab/' + service + '/_etcd/' + environment;
         etcd.get(key, {recursive: true}, function(err, config) {
             if(err) return next(err);
-            next(null, utils.objFromNode(config.node));
+            var jsonObject = utils.objFromNode(config.node);
+            next(null, {service: service, environment: environment, config: jsonObject});
         });
     }
 }

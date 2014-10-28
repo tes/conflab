@@ -8,6 +8,8 @@ var Etcd = require('node-etcd');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var utils = require('./lib/utils');
+var minimist = require('minimist');
+var props = require('pathval');
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });
@@ -62,10 +64,11 @@ Config.prototype.load = function() {
 Config.prototype.loadConfig = function(next) {
 
     var self = this;
-    self.loadFromFiles(function() {
-        self.loadFromEtcd(function() {
-            self.mergeConfig();
-            self.putFilesInEtcd(next);
+    self.loadFromArgv(function() {
+        self.loadFromFiles(function() {
+            self.loadFromEtcd(function() {
+                self.mergeConfig(next);
+            });
         });
     });
 
@@ -88,9 +91,14 @@ Config.prototype.putFilesInEtcd = function(next) {
         self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
     }
 
+    var loadConfig = function(cb) {
+        var etcdKey = path.join(self.etcdKeyBase, '_merged', self.environment);
+        self.etcd.set(etcdKey, JSON.stringify(self.config), cb);
+    }
+
     async.map(_.keys(self.fileContent),loadFile, function(err) {
-        next();
-    })
+        loadConfig(next);
+    });
 
 }
 
@@ -98,7 +106,7 @@ Config.prototype.putFilesInEtcd = function(next) {
  * Merge the file and etcd config together with helpers, this is done
  * to allow the etcd config to change without reloading files.
  */
-Config.prototype.mergeConfig = function() {
+Config.prototype.mergeConfig = function(next) {
 
     var self = this;
     self.config = {_:{}};
@@ -107,6 +115,7 @@ Config.prototype.mergeConfig = function() {
     self.config._.on = self.events.on.bind(self.events);
     self.config._.etcd = self.etcd;
     self.config._.stop = self.watcher ? self.watcher.stop.bind(self.watcher) : function() {};
+    self.putFilesInEtcd(next);
 
 }
 
@@ -125,7 +134,7 @@ Config.prototype.loadFromEtcd = function(next) {
         self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
         self.watcher.on('change', function(config) {
             var key = config.node.key.replace(self.etcdKey + '/','');
-            utils.index(self.etcdConfig, key, config.action, config.node.value)
+            props.set(self.etcdConfig, key.replace(/\//g,"."), config.node.value);
             self.mergeConfig();
             self.events.emit('change');
         });
@@ -155,6 +164,19 @@ Config.prototype.loadFromEtcd = function(next) {
 
 }
 
+Config.prototype.loadFromArgv = function(next) {
+    var self = this;
+    var config = minimist(process.argv.slice(2));
+    delete config._ // Remove as not needed
+    var jsonData = {};
+    _.forOwn(config, function(value, key) {
+        props.set(jsonData, key.replace(/\//g,"."), value);
+    });
+    self.fileContent['argv'] = _.cloneDeep(jsonData);
+    self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
+    next();
+}
+
 /**
  * Load config from files, order defined here is important.
  */
@@ -171,7 +193,6 @@ Config.prototype.loadFromFiles = function(next) {
         {path: path.join(self.configPath, 'runtime.json'), name: 'runtime'},
         {path: path.join(self.configPath, hostname + '.json'), name: 'hostname-' + hostname}
     ];
-
 
     async.mapSeries(configFiles, self.loadFile.bind(self), next);
 }
@@ -192,8 +213,9 @@ Config.prototype.loadFile = function(file, next) {
         } catch(ex) {
             return next();
         }
-        // Save the content for later and reload
-        self.fileContent[file.name] = jsonData;
+        // Save the content for later and reload, clone to ensure the defaults
+        // Doesn't over-ride
+        self.fileContent[file.name] = _.cloneDeep(jsonData);
         self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
         return next();
       });
