@@ -4,11 +4,12 @@ A complex configuration library that you should only use if you want to do thing
 
 This will load configuration from the following sources, with the later files over-riding any values set in the earlier ones (think of it as getting more specfic as you go down the list).
 
-1. ./config/default.json
-2. ./config/[environment>].json
-3. ./config/runtime.json
-4. ./config/[your-hostname].json
-5. etcd:/service-name/config**
+1. argv params (--database.host db.example.com)
+2. ./config/default.json
+3. ./config/[environment>].json
+4. ./config/runtime.json
+5. ./config/[your-hostname].json
+6. etcd:/conflab/service-name/_etcd/environment/config**
 
 So by specifying the majority of your configuration in ./config/default.json, you can then override the defaults in the environment or host specific sections using one or more of the other config locations.
 
