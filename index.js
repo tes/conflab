@@ -29,9 +29,9 @@ Config.prototype.load = function(options, next) {
     if(!next) next = options;
 
     var self = this;
+    if(self.loaded) return next(null, self.config);
 
-    // If we are already loaded do nothing
-    if(self.done) return self.config;
+    self.loaded = false;
 
     // This is the configuration that comes from the application it is included in
     self.libraryPath = process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
@@ -49,6 +49,7 @@ Config.prototype.load = function(options, next) {
     self.config = {};
 
     self.loadConfig(function loadConfigCb() {
+        self.loaded = true;
         next(null, self.config);
     });
 
@@ -83,12 +84,12 @@ Config.prototype.putFilesInEtcd = function(next) {
 
     var loadFile = function(file, cb) {
         var fileJson = self.fileContent[file];
-        var etcdKey = path.join(self.etcdKeyBase, '_files', self.environment, file);
+        var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, file);
         self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
     }
 
     var loadConfig = function(cb) {
-        var etcdKey = path.join(self.etcdKeyBase, '_merged', self.environment);
+        var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, 'merged');
         self.etcd.set(etcdKey, JSON.stringify(self.config), cb);
     }
 
@@ -145,7 +146,7 @@ Config.prototype.loadFromEtcd = function(next) {
     var packageJson = path.join(process.cwd(), 'package.json');
     if(fs.existsSync(packageJson)) {
        self.etcdKeyBase = self.prefix + '/' + require(packageJson).name;
-       self.etcdKey = self.etcdKeyBase + '/_etcd/' + self.environment;
+       self.etcdKey = self.etcdKeyBase + '/config/' + self.environment;
     } else {
         console.log('[CONFLAB] Error: You cant use etcd in a service without a name in the package.json');
         return next();
@@ -222,5 +223,4 @@ Config.prototype.loadFile = function(file, next) {
 /**
  * Export an already loaded singleton
  */
-var config = new Config();
-module.exports = config;
+module.exports = Config;

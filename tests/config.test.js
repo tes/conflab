@@ -5,15 +5,14 @@ var async = require('async');
 var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
-var Conflab = require('..');
 
 describe('Config file module', function() {
 
-    var config;
+    var config, Conflab = require('..'), conflab = new Conflab();
 
     before(function(done) {
         process.env.CONFLAB_CONFIG = path.join(__dirname,'file');
-        Conflab.load(function(err, conflabConfig) {
+        conflab.load(function(err, conflabConfig) {
             config = conflabConfig;
             done();
         })
@@ -43,14 +42,14 @@ describe('Config etcd module', function() {
     var Etcd = require('node-etcd');
     var fileConfig = require(path.join(__dirname,'etcd','default.json'));
     var etcd = new Etcd(fileConfig.etcd.host || '127.0.0.1', fileConfig.etcd.port || '4001');
-    var config;
+    var config, Conflab = require('..'), conflab = new Conflab();
 
     before(function(done) {
-        etcd.rmdir("/conflab/conflab/_etcd/test", { recursive: true }, function(err) {
-            etcd.set("/conflab/conflab/_etcd/test/ekey1", "value", function() {
+        etcd.rmdir("/conflab/conflab/config/test", { recursive: true }, function(err) {
+            etcd.set("/conflab/conflab/config/test/ekey1", "value", function() {
                 // Can't load config in here as it seems to screw with mocha
                 process.env.CONFLAB_CONFIG = path.join(__dirname,'etcd');
-                config = Conflab.load(function(err, conflabConfig) {
+                config = conflab.load(function(err, conflabConfig) {
                     config = conflabConfig;
                     done();
                 })
@@ -64,7 +63,7 @@ describe('Config etcd module', function() {
     });
 
     it('should update if etcd configuration changed', function(done) {
-        etcd.set("/conflab/conflab/_etcd/test/ekey1", "value2", function() {
+        etcd.set("/conflab/conflab/config/test/ekey1", "value2", function() {
             expect(config.ekey1).to.be('value2');
             expect(config.k1.k2.k3).to.be('Hola');
             done();
@@ -72,14 +71,14 @@ describe('Config etcd module', function() {
     });
 
     it('should over-write if etcd added for node in file', function(done) {
-        etcd.set("/conflab/conflab/_etcd/test/k1/k2/k3", "Gracias", function() {
+        etcd.set("/conflab/conflab/config/test/k1/k2/k3", "Gracias", function() {
             expect(config.k1.k2.k3).to.be('Gracias');
             done();
         });
     });
 
     it('should reset back to file default if etcd removed for node in file', function(done) {
-        etcd.rmdir("/conflab/conflab/_etcd/test/k1", {recursive: true}, function() {
+        etcd.rmdir("/conflab/conflab/config/test/k1", {recursive: true}, function() {
             expect(config.k1.k2.k3).to.be('Hola');
             done();
         });

@@ -40,7 +40,7 @@ Api.prototype.getServiceEnvironments = function(service, next) {
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_files/';
+    var key = '/conflab/' + service + '/files/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
         var environments = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
@@ -53,7 +53,7 @@ Api.prototype.getServiceEnvironmentFiles = function(service, environment, next) 
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_files/' + environment + '/';
+    var key = '/conflab/' + service + '/files/' + environment + '/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
         var files = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
@@ -65,7 +65,7 @@ Api.prototype.getServiceEnvironmentFileConfig =  function(service, environment, 
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_files/' + environment + '/' + file;
+    var key = '/conflab/' + service + '/files/' + environment + '/' + file;
     etcd.get(key, function(err, data) {
         if(err) return next(err);
         next(null, {service: service, environment: environment, file: file, config: JSON.parse(data.node.value)});
@@ -76,7 +76,7 @@ Api.prototype.getServiceEnvironmentMergedConfig = function(service, environment,
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_merged/' + environment;
+    var key = '/conflab/' + service + '/files/' + environment + '/merged';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
         next(null, {service: service, environment: environment, config: JSON.parse(data.node.value)});
@@ -87,7 +87,7 @@ Api.prototype.getServiceEnvironmentEtcdConfig = function(service, environment, n
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_etcd/' + environment;
+    var key = '/conflab/' + service + '/config/' + environment;
     etcd.get(key, {recursive: true}, function(err, config) {
         if(err) return next(err);
         var jsonObject = utils.objFromNode(config.node);
