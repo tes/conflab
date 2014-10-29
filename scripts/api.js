@@ -4,27 +4,33 @@
  */
 
 var path = require('path');
-process.env.CONFLAB_CONFIG = path.join(__dirname,'..','tests','etcd');
-var config = require('..');
-var capi = require('../api');
+var Conflab = require('..');
+var Api = require('../api');
 var async = require('async');
 
-capi.getServices(function(err, services) {
-    console.dir(services);
-});
+process.env.CONFLAB_CONFIG = path.join(__dirname,'..','tests','etcd');
 
-capi.getServiceEnvironments('service-page-composer', function(err, environments) {
-    console.dir(environments);
-});
+Conflab.load(function(err, config) {
 
-capi.getServiceEnvironmentFiles('service-page-composer', 'local', function(err, files) {
-    console.dir(files);
-});
+    var capi = new Api(config);
+    capi.getServices(function(err, services) {
+        console.dir(services);
+    });
 
-capi.getServiceEnvironmentFileConfig('service-page-composer', 'local', 'default', function(err, file) {
-    console.dir(file);
-});
+    capi.getServiceEnvironments('service-page-composer', function(err, environments) {
+        console.dir(environments);
+    });
 
-capi.getServiceEnvironmentEtcdConfig('service-page-composer', 'local', function(err, config) {
-    console.dir(config);
-});
+    capi.getServiceEnvironmentFiles('service-page-composer', 'local', function(err, files) {
+        console.dir(files);
+    });
+
+    capi.getServiceEnvironmentFileConfig('service-page-composer', 'local', 'default', function(err, file) {
+        console.dir(file);
+    });
+
+    capi.getServiceEnvironmentEtcdConfig('service-page-composer', 'local', function(err, config) {
+        console.dir(config);
+    });
+})
+

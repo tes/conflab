@@ -20,12 +20,11 @@ The config object is returned as a simple JSON object.  Just access the properti
 ### Example usage (Initalising a new config object)
 
 ```js
-var config = require('conflab');
-app.listen(config.server.port, config.service.host);
+var Conflab = require('conflab');
+Conflab.load(function(err, config) {
+    app.listen(config.server.port, config.service.host);
+});
 ```
-
-You can now include this in any module (it is a simple singleton).  We find this pattern avoids you having to pass a config
-object around your code which makes it a bit cluttered.
 
 ## ETCD
 
@@ -72,7 +71,6 @@ This will over-ride the configuration:
 The only additional helper added to the config object is a 'listen', that allows you to register a listener that will be informed if the configuration changes (e.g. someone updates) an etcd key.
 
 ```
-var config = require('..');
 config._.on('change', function() {
     console.log('Config Changed');
 })

@@ -24,7 +24,9 @@ function Config() {
  * A singleton async > sync hack.  If this makes you uncomfortable
  * you should probably use a different library.
  */
-Config.prototype.load = function() {
+Config.prototype.load = function(options, next) {
+
+    if(!next) next = options;
 
     var self = this;
 
@@ -46,15 +48,9 @@ Config.prototype.load = function() {
     self.etcdConfig = {};
     self.config = {};
 
-    // Welcome to the magic of deasync
-    self.done = false;
     self.loadConfig(function loadConfigCb() {
-      self.done = true;
+        next(null, self.config);
     });
-    while(!self.done) {
-      require('deasync').runLoopOnce();
-    }
-    return self.config;
 
 }
 
@@ -227,4 +223,4 @@ Config.prototype.loadFile = function(file, next) {
  * Export an already loaded singleton
  */
 var config = new Config();
-module.exports = config.load();
+module.exports = config;
