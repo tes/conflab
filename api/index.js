@@ -17,7 +17,7 @@ Api.prototype.getServices = function(next) {
     var key = '/conflab/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
-        var serviceNodes = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,"")});
+        var serviceNodes = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
         next(null, serviceNodes);
     });
 }
@@ -30,7 +30,7 @@ Api.prototype.getServices = function(next) {
     var key = '/conflab/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
-        var serviceNodes = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,"")});
+        var serviceNodes = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
         next(null, serviceNodes);
     });
 }
@@ -43,7 +43,7 @@ Api.prototype.getServiceEnvironments = function(service, next) {
     var key = '/conflab/' + service + '/_files/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
-        var environments = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,"")});
+        var environments = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
         next(null, {service: service, environments: environments});
     });
 }
@@ -53,10 +53,10 @@ Api.prototype.getServiceEnvironmentFiles = function(service, environment, next) 
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_files/' + environment + "/";
+    var key = '/conflab/' + service + '/_files/' + environment + '/';
     etcd.get(key, function(err, data) {
         if(err) return next(err);
-        var files = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,"")});
+        var files = _.map(_.pluck(data.node.nodes, 'key'), function(item) { return item.replace(key,'')});
         next(null, {service: service, environment: environment, files: files});
     });
 }
@@ -65,7 +65,7 @@ Api.prototype.getServiceEnvironmentFileConfig =  function(service, environment, 
     var self = this;
     var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
-    var key = '/conflab/' + service + '/_files/' + environment + "/" + file;
+    var key = '/conflab/' + service + '/_files/' + environment + '/' + file;
     etcd.get(key, function(err, data) {
         if(err) return next(err);
         next(null, {service: service, environment: environment, file: file, config: JSON.parse(data.node.value)});
@@ -74,7 +74,7 @@ Api.prototype.getServiceEnvironmentFileConfig =  function(service, environment, 
 
 Api.prototype.getServiceEnvironmentMergedConfig = function(service, environment, next) {
     var self = this;
-    var etcd = config._.etcd;
+    var etcd = self.config._.etcd;
     if(!etcd) return next(new Error('Etcd not available'));
     var key = '/conflab/' + service + '/_merged/' + environment;
     etcd.get(key, function(err, data) {

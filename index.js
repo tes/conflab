@@ -39,7 +39,7 @@ Config.prototype.load = function(options, next) {
     self.prefix = '/conflab';
 
     // Otherwise lets load up
-    self.environment = process.env.CONFLAB_ENV || process.env.NODE_ENV || "development";
+    self.environment = process.env.CONFLAB_ENV || process.env.NODE_ENV || 'development';
     self.events = new EventEmitter();
 
     // Local configs
@@ -92,7 +92,7 @@ Config.prototype.putFilesInEtcd = function(next) {
         self.etcd.set(etcdKey, JSON.stringify(self.config), cb);
     }
 
-    async.map(_.keys(self.fileContent),loadFile, function(err) {
+    async.map(_.keys(self.fileContent),loadFile, function() {
         loadConfig(next);
     });
 
@@ -130,7 +130,7 @@ Config.prototype.loadFromEtcd = function(next) {
         self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
         self.watcher.on('change', function(config) {
             var key = config.node.key.replace(self.etcdKey + '/','');
-            props.set(self.etcdConfig, key.replace(/\//g,"."), config.node.value);
+            props.set(self.etcdConfig, key.replace(/\//g,'.'), config.node.value);
             self.mergeConfig();
             self.events.emit('change');
         });
@@ -144,7 +144,7 @@ Config.prototype.loadFromEtcd = function(next) {
     // Etcd needs a service name to create the key
     var packageJson = path.join(process.cwd(), 'package.json');
     if(fs.existsSync(packageJson)) {
-       self.etcdKeyBase = self.prefix + "/" + require(packageJson).name;
+       self.etcdKeyBase = self.prefix + '/' + require(packageJson).name;
        self.etcdKey = self.etcdKeyBase + '/_etcd/' + self.environment;
     } else {
         console.log('[CONFLAB] Error: You cant use etcd in a service without a name in the package.json');
@@ -166,9 +166,9 @@ Config.prototype.loadFromArgv = function(next) {
     delete config._ // Remove as not needed
     var jsonData = {};
     _.forOwn(config, function(value, key) {
-        props.set(jsonData, key.replace(/\//g,"."), value);
+        props.set(jsonData, key.replace(/\//g,'.'), value);
     });
-    self.fileContent['argv'] = _.cloneDeep(jsonData);
+    self.fileContent.argv = _.cloneDeep(jsonData);
     self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
     next();
 }

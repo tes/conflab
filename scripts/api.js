@@ -6,7 +6,6 @@
 var path = require('path');
 var Conflab = require('..');
 var Api = require('../api');
-var async = require('async');
 
 process.env.CONFLAB_CONFIG = path.join(__dirname,'..','tests','etcd');
 
