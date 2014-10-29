@@ -1,6 +1,6 @@
 {
   "name": "conflab",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A configuration library that probably does more than it should.",
   "main": "index.js",
   "repository": {
