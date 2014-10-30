@@ -9,7 +9,7 @@ var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var utils = require('./lib/utils');
 var minimist = require('minimist');
-var props = require('pathval');
+var pathval = require('pathval');
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });
@@ -32,6 +32,7 @@ Config.prototype.load = function(options, next) {
     if(self.loaded) return next(null, self.config);
 
     self.loaded = false;
+    self.heartbeatInterval = 10000;
 
     // This is the configuration that comes from the application it is included in
     self.libraryPath = process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
@@ -50,6 +51,7 @@ Config.prototype.load = function(options, next) {
 
     self.loadConfig(function loadConfigCb() {
         self.loaded = true;
+        self.heartbeat();
         next(null, self.config);
     });
 
@@ -62,7 +64,7 @@ Config.prototype.loadConfig = function(next) {
 
     var self = this;
     self.loadFromArgv(function() {
-        self.loadFromFiles(function() {
+        self.loadFromFiles(function() {            
             self.loadFromEtcd(function() {
                 self.mergeConfig(next);
             });
@@ -117,6 +119,17 @@ Config.prototype.mergeConfig = function(next) {
 }
 
 /**
+ * Update a key on etcd every 10 seconds so that it nows the service is up.
+ */
+Config.prototype.heartbeat = function() {
+    var self = this;
+    if(!self.etcd) return;
+    var hbKey = self.etcdKeyBase + '/heartbeat/' + self.environment;    
+    self.etcd.set(hbKey, Date.now());    
+    setTimeout(self.heartbeat.bind(self), self.heartbeatInterval);
+}
+
+/**
  * Load config from etcd - fails silently if no etcd config defined in files
  */
 Config.prototype.loadFromEtcd = function(next) {
@@ -131,7 +144,7 @@ Config.prototype.loadFromEtcd = function(next) {
         self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
         self.watcher.on('change', function(config) {
             var key = config.node.key.replace(self.etcdKey + '/','');
-            props.set(self.etcdConfig, key.replace(/\//g,'.'), config.node.value);
+            pathval.set(self.etcdConfig, key, config.node.value);
             self.mergeConfig();
             self.events.emit('change');
         });
@@ -140,7 +153,7 @@ Config.prototype.loadFromEtcd = function(next) {
 
     }
 
-    if(!self.fileConfig.etcd) { return next(); }
+    if(!self.fileConfig.etcd) { return next(); }    
 
     // Etcd needs a service name to create the key
     var packageJson = path.join(process.cwd(), 'package.json');
@@ -154,7 +167,7 @@ Config.prototype.loadFromEtcd = function(next) {
 
     self.etcd = new Etcd(self.fileConfig.etcd.host || '127.0.0.1', self.fileConfig.etcd.port || '4001');
 
-    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
+    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {        
         if(err) { return next(); }
         parseConfig(config.node, next);
     });
@@ -167,7 +180,7 @@ Config.prototype.loadFromArgv = function(next) {
     delete config._ // Remove as not needed
     var jsonData = {};
     _.forOwn(config, function(value, key) {
-        props.set(jsonData, key.replace(/\//g,'.'), value);
+        pathval.set(jsonData, key.replace(/\//g,'.'), value);
     });
     self.fileContent.argv = _.cloneDeep(jsonData);
     self.fileConfig = defaultsDeep(jsonData, self.fileConfig);

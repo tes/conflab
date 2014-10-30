@@ -71,14 +71,14 @@ describe('Config etcd module', function() {
     });
 
     it('should over-write if etcd added for node in file', function(done) {
-        etcd.set("/conflab/conflab/config/test/k1/k2/k3", "Gracias", function() {
+        etcd.set("/conflab/conflab/config/test/k1.k2.k3", "Gracias", function() {
             expect(config.k1.k2.k3).to.be('Gracias');
             done();
         });
     });
 
     it('should reset back to file default if etcd removed for node in file', function(done) {
-        etcd.rmdir("/conflab/conflab/config/test/k1", {recursive: true}, function() {
+        etcd.rmdir("/conflab/conflab/config/test/k1.k2.k3", {recursive: true}, function() {
             expect(config.k1.k2.k3).to.be('Hola');
             done();
         });

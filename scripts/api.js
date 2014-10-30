@@ -27,9 +27,10 @@ Conflab.load(function(err, config) {
     capi.getServiceEnvironmentFileConfig('service-page-composer', 'local', 'default', function(err, file) {
         console.dir(file);
     });
-
-    capi.getServiceEnvironmentEtcdConfig('service-page-composer', 'local', function(err, config) {
-        console.dir(config);
+    
+    capi.getServiceEnvironmentFileConfig('service-page-composer', 'local', 'etcd', function(err, file) {
+        console.dir(file);
     });
+    
 })
 
