@@ -26,7 +26,10 @@ function Config() {
  */
 Config.prototype.load = function(options, next) {
 
-    if(!next) next = options;
+    if(!next) {
+        next = options;
+        options = {};
+    }
 
     var self = this;
     if(self.loaded) return next(null, self.config);
@@ -35,12 +38,12 @@ Config.prototype.load = function(options, next) {
     self.heartbeatInterval = 10000;
 
     // This is the configuration that comes from the application it is included in
-    self.libraryPath = process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
-    self.configPath = process.env.CONFLAB_CONFIG || path.join(process.cwd(), 'config');
+    self.libraryPath = options.libraryPath || process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
+    self.configPath = options.configPath || process.env.CONFLAB_CONFIG || path.join(process.cwd(), 'config');
     self.prefix = '/conflab';
 
     // Otherwise lets load up
-    self.environment = process.env.CONFLAB_ENV || process.env.NODE_ENV || 'development';
+    self.environment = options.env || process.env.CONFLAB_ENV || process.env.NODE_ENV || 'development';
     self.events = new EventEmitter();
 
     // Local configs
@@ -64,7 +67,7 @@ Config.prototype.loadConfig = function(next) {
 
     var self = this;
     self.loadFromArgv(function() {
-        self.loadFromFiles(function() {            
+        self.loadFromFiles(function() {
             self.loadFromEtcd(function() {
                 self.mergeConfig(next);
             });
@@ -124,8 +127,8 @@ Config.prototype.mergeConfig = function(next) {
 Config.prototype.heartbeat = function() {
     var self = this;
     if(!self.etcd) return;
-    var hbKey = self.etcdKeyBase + '/heartbeat/' + self.environment;    
-    self.etcd.set(hbKey, Date.now());    
+    var hbKey = self.etcdKeyBase + '/heartbeat/' + self.environment;
+    self.etcd.set(hbKey, Date.now());
     setTimeout(self.heartbeat.bind(self), self.heartbeatInterval);
 }
 
@@ -153,7 +156,7 @@ Config.prototype.loadFromEtcd = function(next) {
 
     }
 
-    if(!self.fileConfig.etcd) { return next(); }    
+    if(!self.fileConfig.etcd) { return next(); }
 
     // Etcd needs a service name to create the key
     var packageJson = path.join(process.cwd(), 'package.json');
@@ -167,7 +170,7 @@ Config.prototype.loadFromEtcd = function(next) {
 
     self.etcd = new Etcd(self.fileConfig.etcd.host || '127.0.0.1', self.fileConfig.etcd.port || '4001');
 
-    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {        
+    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
         if(err) { return next(); }
         parseConfig(config.node, next);
     });
