@@ -67,10 +67,11 @@ Config.prototype.loadConfig = function(next) {
 
     var self = this;
     async.series([
-        self.loadFromFiles.bind(this),
-        self.loadFromArgv.bind(this),
-        self.loadFromEtcd.bind(this),
-        self.mergeConfig.bind(this)
+        self.loadFromOptions.bind(self),
+        self.loadFromFiles.bind(self),
+        self.loadFromArgv.bind(self),
+        self.loadFromEtcd.bind(self),
+        self.mergeConfig.bind(self)
     ], next);
 }
 
