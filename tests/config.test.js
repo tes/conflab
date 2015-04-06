@@ -9,10 +9,16 @@ var path = require('path');
 describe('Config file module', function() {
 
     var config, Conflab = require('..'), conflab = new Conflab();
+    var options = {
+        config: {
+            serviceKey: 'options',
+            serviceKey4: 'options'
+        }
+    };
 
     before(function(done) {
         process.env.CONFLAB_CONFIG = path.join(__dirname,'file');
-        conflab.load(function(err, conflabConfig) {
+        conflab.load(options, function(err, conflabConfig) {
             config = conflabConfig;
             done();
         })
@@ -22,6 +28,7 @@ describe('Config file module', function() {
         expect(config.serviceKey1).to.be('default');
         expect(config.serviceKey2).to.be('environment');
         expect(config.serviceKey3).to.be('runtime');
+        expect(config.serviceKey4).to.be('options');
     });
 
     it('should over-ride based on order', function() {
