@@ -29,11 +29,14 @@ Config.prototype.load = function(options, next) {
     if(!next) {
         next = options;
         options = {};
+    } else {
+        options = options || {};
     }
 
     var self = this;
     if(self.loaded) return next(null, self.config);
 
+    self.options = options;
     self.loaded = false;
     self.heartbeatInterval = 10000;
 
@@ -174,6 +177,15 @@ Config.prototype.loadFromEtcd = function(next) {
         parseConfig(config.node, next);
     });
 
+}
+
+Config.prototype.loadFromOptions = function(next) {
+    var self = this;
+    if (_.isEmpty(self.options.config)) return next();
+    var data = _.cloneDeep(self.options.config);
+    self.fileContent.opts = data;
+    self.fileConfig = defaultsDeep(_.cloneDeep(data), self.fileConfig);
+    next();
 }
 
 Config.prototype.loadFromArgv = function(next) {
