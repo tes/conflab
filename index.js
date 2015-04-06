@@ -66,14 +66,12 @@ Config.prototype.load = function(options, next) {
 Config.prototype.loadConfig = function(next) {
 
     var self = this;
-    self.loadFromArgv(function() {
-        self.loadFromFiles(function() {
-            self.loadFromEtcd(function() {
-                self.mergeConfig(next);
-            });
-        });
-    });
-
+    async.series([
+        self.loadFromArgv.bind(this),
+        self.loadFromFiles.bind(this),
+        self.loadFromEtcd.bind(this),
+        self.mergeConfig.bind(this)
+    ], next);
 }
 
 /**
