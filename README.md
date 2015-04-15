@@ -14,6 +14,19 @@ This will load configuration from the following sources, with the later files ov
 
 So by specifying the majority of your configuration in ./config/default.json, you can then override the defaults in the environment or host specific sections using one or more of the other config locations.
 
+### Additional files
+
+Any of the config files can also specify additional files to be loaded after it. This is expressed by setting `CF_additionalFiles` field.
+
+#### Example
+
+```json
+{
+    "key": "value",
+    "CF_additionalFiles": ["../config.json", "/etc/app/pass.json"]
+}
+```
+
 ### The config object
 
 The config object is returned as a simple JSON object.  Just access the properties you need.
@@ -35,7 +48,7 @@ This allows you to selectively over-ride any configuration at run time by adding
 
 For the etcd option to work, one of the earlier files must have included etcd connection information:
 
-```
+```json
 {
     "etcd":{
         "host":"127.0.0.1",
@@ -59,7 +72,7 @@ environment:  the name of the environment
 
 This will over-ride the configuration:
 
-```
+```json
 {
     "key":{
         "path": "value"
@@ -71,7 +84,7 @@ This will over-ride the configuration:
 
 The only additional helper added to the config object is a 'listen', that allows you to register a listener that will be informed if the configuration changes (e.g. someone updates) an etcd key.
 
-```
+```js
 config._.on('change', function() {
     console.log('Config Changed');
 })
@@ -93,3 +106,17 @@ To aid in the development of an administration screen, when an application start
 ```
 
 This is done so that you can show the config coming from the application source code alongside any over-rides specified in etcd.
+
+####  Controlling file export to etcd
+
+`CF_exportToEtcd` field can be used to explicitly control if a file should be copied to etcd. If the field is not set conflab will copy all "regular" config files (default.json, [environment].json, runtime.json etc.) to etcd and not copy any of the "additonal" config files (specified in `CF_additionalFiles`).
+The default behaviour caters to the use case where sensitive information is kept in files outside of version control and should not be exported and shared.
+
+##### Example
+
+```json
+{
+    "CF_exportToEtcd": false,
+    "foo": "bar"
+}
+```
