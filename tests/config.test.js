@@ -26,6 +26,7 @@ describe('Config file module', function() {
 
     it('should parse independent elements correctly', function() {
         expect(config.serviceKey1).to.be('default');
+        expect(config.serviceKey1_1).to.be('external');
         expect(config.serviceKey2).to.be('environment');
         expect(config.serviceKey3).to.be('runtime');
         expect(config.serviceKey4).to.be('options');

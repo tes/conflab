@@ -7,5 +7,6 @@
         "k2":{
             "k3":"Hola"
         }
-    }
+    },
+    "CF_additionalFiles": ["external.json"]
 }

@@ -100,7 +100,7 @@ Config.prototype.putFilesInEtcd = function(next) {
         self.etcd.set(etcdKey, JSON.stringify(self.config), cb);
     }
 
-    async.map(_.keys(self.fileContent),loadFile, function() {
+    async.each(_.keys(self.fileContent),loadFile, function() {
         loadConfig(next);
     });
 
@@ -241,9 +241,25 @@ Config.prototype.loadFile = function(file, next) {
         // Doesn't over-ride
         self.fileContent[file.name] = _.cloneDeep(jsonData);
         self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
-        return next();
+        return loadAdditionalFiles(file, next);
       });
     });
+
+    function loadAdditionalFiles(file, next) {
+        var files = self.fileContent[file.name].CF_additionalFiles;
+        if (_.isEmpty(files)) return next();
+        async.each(files, loadOne, next);
+
+        function loadOne(location, next) {
+            if (path.resolve(location) !== path.normalize(location)) {
+                location = path.resolve(path.dirname(file.path), location);
+            }
+            self.loadFile({
+                path: location,
+                name: file.name + '-' + path.basename(location)
+            }, next);
+        }
+    }
 
 }
 
