@@ -26,7 +26,7 @@ describe('Config file module', function() {
 
     it('should parse independent elements correctly', function() {
         expect(config.serviceKey1).to.be('default');
-        expect(config.serviceKey1_1).to.be('external');
+        expect(config.serviceKey1_1).to.be('additional');
         expect(config.serviceKey2).to.be('environment');
         expect(config.serviceKey3).to.be('runtime');
         expect(config.serviceKey4).to.be('options');
@@ -53,14 +53,14 @@ describe('Config etcd module', function() {
     var config, Conflab = require('..'), conflab = new Conflab();
 
     before(function(done) {
-        etcd.rmdir("/conflab/conflab/config/test", { recursive: true }, function(err) {
+        etcd.rmdir("/conflab/conflab", { recursive: true }, function(err) {
             etcd.set("/conflab/conflab/config/test/ekey1", "value", function() {
                 // Can't load config in here as it seems to screw with mocha
                 process.env.CONFLAB_CONFIG = path.join(__dirname,'etcd');
                 config = conflab.load(function(err, conflabConfig) {
                     config = conflabConfig;
                     done();
-                })
+                });
             });
         });
     });
@@ -68,6 +68,23 @@ describe('Config etcd module', function() {
     it('should load configuration', function() {
         expect(config.ekey1).to.be('value');
         expect(config.k1.k2.k3).to.be('Hola');
+        expect(config.additionalKey1).to.be('exported');
+        expect(config.additionalKey2).to.be('not exported');
+    });
+
+    it('should not export additional files', function(done) {
+        etcd.get("/conflab/conflab/files/test/default-additional", function (err) {
+            expect(err.message).to.be('Key not found');
+            done();
+        });
+    });
+
+    it('should not export additional files marked for export', function(done) {
+        etcd.get("/conflab/conflab/files/test/default-additional-export", function (err, result) {
+            expect(err).to.be.null;
+            expect(result).to.be.ok;
+            done();
+        });
     });
 
     it('should update if etcd configuration changed', function(done) {

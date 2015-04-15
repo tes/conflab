@@ -54,6 +54,7 @@ Config.prototype.load = function(options, next) {
     self.fileConfig = {};
     self.etcdConfig = {};
     self.config = {};
+    self.ignoreExport = {};
 
     self.loadConfig(function loadConfigCb() {
         self.loaded = true;
@@ -90,6 +91,7 @@ Config.prototype.putFilesInEtcd = function(next) {
     if(!self.etcd) return next();
 
     var loadFile = function(file, cb) {
+        if (self.ignoreExport[file]) return cb();
         var fileJson = self.fileContent[file];
         var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, file);
         self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
@@ -241,6 +243,7 @@ Config.prototype.loadFile = function(file, next) {
         // Doesn't over-ride
         self.fileContent[file.name] = _.cloneDeep(jsonData);
         self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
+        markForExport(file);
         return loadAdditionalFiles(file, next);
       });
     });
@@ -256,9 +259,16 @@ Config.prototype.loadFile = function(file, next) {
             }
             self.loadFile({
                 path: location,
-                name: file.name + '-' + path.basename(location)
+                name: file.name + '-' + path.basename(location, path.extname(location)),
+                additional: true
             }, next);
         }
+    }
+
+    function markForExport(file) {
+        var exportToEtcd = self.fileContent[file.name].CF_exportToEtcd;
+        var explicit = exportToEtcd !== null && exportToEtcd !== undefined;
+        self.ignoreExport[file.name] = (explicit && !exportToEtcd) || (file.additional && !explicit);
     }
 
 }

@@ -8,5 +8,5 @@
             "k3":"Hola"
         }
     },
-    "CF_additionalFiles": ["external.json"]
+    "CF_additionalFiles": ["additional.json"]
 }
