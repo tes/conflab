@@ -21,7 +21,8 @@
     "lodash": "^2.4.1",
     "minimist": "^1.1.0",
     "node-etcd": "^3.0.0",
-    "pathval": "^0.1.1"
+    "pathval": "^0.1.1",
+    "strip-bom": "^1.0.0"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",

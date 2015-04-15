@@ -10,6 +10,7 @@ var _ = require('lodash');
 var utils = require('./lib/utils');
 var minimist = require('minimist');
 var pathval = require('pathval');
+var stripBom = require('strip-bom');
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
   return _.merge(value, other, deep);
 });
@@ -235,7 +236,7 @@ Config.prototype.loadFile = function(file, next) {
         if(err) { return next(); }
         var jsonData;
         try {
-            jsonData = JSON.parse(data);
+            jsonData = JSON.parse(stripBom(data));
         } catch(ex) {
             return next();
         }

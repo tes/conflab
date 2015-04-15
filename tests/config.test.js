@@ -17,7 +17,7 @@ describe('Config file module', function() {
     };
 
     before(function(done) {
-        process.env.CONFLAB_CONFIG = path.join(__dirname,'file');
+        process.env.CONFLAB_CONFIG = path.join(__dirname, 'file');
         conflab.load(options, function(err, conflabConfig) {
             config = conflabConfig;
             done();
