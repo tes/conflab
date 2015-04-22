@@ -80,9 +80,7 @@ Config.prototype.loadConfig = function(next) {
         self.loadFromArgv.bind(self),
         self.loadFromEtcd.bind(self),
         self.mergeConfig.bind(self)
-    ], function(err, res) {
-        next(err, res)
-    });
+    ], next);
 }
 
 /**
@@ -225,9 +223,7 @@ Config.prototype.loadFromFiles = function(next) {
         {path: path.join(self.configPath, hostname + '.json'), name: 'hostname-' + hostname}
     ];
 
-    async.mapSeries(configFiles, self.loadFile.bind(self), function(err, res) {
-        next(err, res)
-    });
+    async.mapSeries(configFiles, self.loadFile.bind(self), next);
 }
 
 /**
