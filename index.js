@@ -57,7 +57,10 @@ Config.prototype.load = function(options, next) {
     self.config = {};
     self.ignoreExport = {};
 
-    self.loadConfig(function loadConfigCb() {
+    self.loadConfig(function loadConfigCb(err) {
+        if (err) {
+            return next(err);
+        }
         self.loaded = true;
         self.heartbeat();
         next(null, self.config);
@@ -77,7 +80,9 @@ Config.prototype.loadConfig = function(next) {
         self.loadFromArgv.bind(self),
         self.loadFromEtcd.bind(self),
         self.mergeConfig.bind(self)
-    ], next);
+    ], function(err, res) {
+        next(err, res)
+    });
 }
 
 /**
@@ -208,7 +213,6 @@ Config.prototype.loadFromArgv = function(next) {
  * Load config from files, order defined here is important.
  */
 Config.prototype.loadFromFiles = function(next) {
-
     var self = this;
 
     // Order here matters, last one always wins
@@ -221,7 +225,9 @@ Config.prototype.loadFromFiles = function(next) {
         {path: path.join(self.configPath, hostname + '.json'), name: 'hostname-' + hostname}
     ];
 
-    async.mapSeries(configFiles, self.loadFile.bind(self), next);
+    async.mapSeries(configFiles, self.loadFile.bind(self), function(err, res) {
+        next(err, res)
+    });
 }
 
 /**
@@ -236,9 +242,10 @@ Config.prototype.loadFile = function(file, next) {
         if(err) { return next(); }
         var jsonData;
         try {
+
             jsonData = JSON.parse(stripBom(data));
         } catch(ex) {
-            return next();
+            return next((ex.sourceFile = file.path) && ex);
         }
         // Save the content for later and reload, clone to ensure the defaults
         // Doesn't over-ride

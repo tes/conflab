@@ -1,0 +1,12 @@
+{
+    "serviceKey1":"default",
+    "serviceKey":"default",
+    "serviceKeyEnv":"default",
+    "sharedDefaultKey":"service",
+    "k1":{
+        "k2":{
+            "k3":"HolaX"
+        
+    },
+    "CF_additionalFiles": ["additional.json"]
+}

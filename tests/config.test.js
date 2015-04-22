@@ -43,6 +43,20 @@ describe('Config file module', function() {
         expect(config.k1.a2).to.be('Adios');
     });
 
+    it('should provide error with a malformed json', function(done) {
+        var old_config = process.env.CONFLAB_CONFIG;
+        process.env.CONFLAB_CONFIG = path.join(__dirname, 'badfile');
+        var Conflab = require('..'), conflab = new Conflab();
+        conflab.load(options, function(err, conflabConfig) {
+            expect(err).to.be.ok()
+            expect(err.sourceFile).to.be.ok()
+            //console.log("@@@@should get error", err, conflabConfig)
+            process.env.CONFLAB_CONFIG = old_config;
+            done()
+        })
+
+    });
+
 });
 
 describe('Config etcd module', function() {
