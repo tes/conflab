@@ -50,7 +50,6 @@ describe('Config file module', function() {
         conflab.load(options, function(err, conflabConfig) {
             expect(err).to.be.ok()
             expect(err.sourceFile).to.be.ok()
-            //console.log("@@@@should get error", err, conflabConfig)
             process.env.CONFLAB_CONFIG = old_config;
             done()
         })
@@ -63,7 +62,7 @@ describe('Config etcd module', function() {
 
     var Etcd = require('node-etcd');
     var fileConfig = require(path.join(__dirname,'etcd','default.json'));
-    var etcd = new Etcd(fileConfig.etcd.host || '127.0.0.1', fileConfig.etcd.port || '4001');
+    var etcd = new Etcd(fileConfig.etcd.hosts);
     var config, Conflab = require('..'), conflab = new Conflab();
 
     before(function(done) {

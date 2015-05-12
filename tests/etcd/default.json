@@ -1,7 +1,6 @@
 {
     "etcd":{
-        "host":"localhost",
-        "port":"4001"
+        "hosts": ["localhost:4001"]
     },
     "k1":{
         "k2":{
