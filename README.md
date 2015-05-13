@@ -51,8 +51,7 @@ For the etcd option to work, one of the earlier files must have included etcd co
 ```json
 {
     "etcd":{
-        "host":"127.0.0.1",
-        "port":"4001"
+        "hosts": ["127.0.0.1:4001"]
     }
 }
 ```

@@ -176,7 +176,7 @@ Config.prototype.loadFromEtcd = function(next) {
         return next();
     }
 
-    self.etcd = new Etcd(self.fileConfig.etcd.host || '127.0.0.1', self.fileConfig.etcd.port || '4001');
+    self.etcd = new Etcd(self.fileConfig.etcd.hosts);
 
     self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
         if(err) { return next(); }
