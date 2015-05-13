@@ -178,11 +178,13 @@ Config.prototype.loadFromEtcd = function(next) {
 
     self.etcd = new Etcd(self.fileConfig.etcd.hosts);
 
-    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
-        if(err) { return next(); }
-        parseConfig(config.node, next);
+    self.etcd.set(self.etcdKey + '/__', 'Ensure config can be watched', function(err) {
+        if (err) return next(err);
+        self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
+            if (err) return next(err);
+            parseConfig(config.node, next);
+        });
     });
-
 }
 
 Config.prototype.loadFromOptions = function(next) {
