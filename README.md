@@ -35,7 +35,8 @@ The config object is returned as a simple JSON object.  Just access the properti
 
 ```js
 var Conflab = require('conflab');
-Conflab.load(function(err, config) {
+var conflab = new Conflab();
+conflab.load(function(err, config) {
     app.listen(config.server.port, config.service.host);
 });
 ```
