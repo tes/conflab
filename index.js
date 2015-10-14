@@ -41,9 +41,11 @@ Config.prototype.load = function(options, next) {
     self.loaded = false;
     self.heartbeatInterval = 10000;
 
+    var configDir = path.dirname(process.env.pm_exec_path) || process.cwd();
+
     // This is the configuration that comes from the application it is included in
     self.libraryPath = options.libraryPath || process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
-    self.configPath = options.configPath || process.env.CONFLAB_CONFIG || path.join(process.env.pm_exec_path || process.cwd(), 'config');
+    self.configPath = options.configPath || process.env.CONFLAB_CONFIG || path.join(configDir, 'config');
     self.prefix = '/conflab';
 
     // Otherwise lets load up
