@@ -6,10 +6,8 @@ var pathval = require('pathval');
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 
-var Config = require('../');
-var utils = require('./utils');
-
-var defaultsDeep = _.partialRight(_.merge, function deep(value, other) { return _.merge(value, other, deep); });
+var Config = require('./Config');
+var utils = require('./lib/utils');
 
 /**
  * Copy file content over to keys in etcd
@@ -43,8 +41,8 @@ EtcdConfig.prototype.loadConfig = function(next) {
  */
 EtcdConfig.prototype.mergeConfig = function(next) {
   this.config = { _: {} };
-  this.config = defaultsDeep(this.fileConfig, this.config);
-  this.config = defaultsDeep(this.etcdConfig, this.config);
+  this.config = utils.defaultsDeep(this.fileConfig, this.config);
+  this.config = utils.defaultsDeep(this.etcdConfig, this.config);
   this.config._.on = this.events.on.bind(this.events);
   this.config._.etcd = this.etcd;
   this.config._.stop = this.watcher ? this.watcher.stop.bind(this.watcher) : function() {};
@@ -88,7 +86,7 @@ EtcdConfig.prototype.loadFromEtcd = function(next) {
   var self = this;
 
   var parseConfig = function(node, cb) {
-    self.etcdConfig = defaultsDeep(utils.objFromNode(node), self.etcdConfig);
+    self.etcdConfig = utils.defaultsDeep(utils.objFromNode(node), self.etcdConfig);
 
     // Configure the watcher
     self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});

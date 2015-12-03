@@ -9,7 +9,7 @@ var minimist = require('minimist');
 var pathval = require('pathval');
 var stripBom = require('strip-bom');
 
-var defaultsDeep = _.partialRight(_.merge, function deep(value, other) { return _.merge(value, other, deep); });
+var utils = require('./lib/utils');
 
 /**
  * Core class - no construction options, all passed via config or env variables
@@ -60,7 +60,6 @@ Config.prototype.load = function(options, next) {
     this.loaded = true;
     next(null, this.config);
   }.bind(this));
-
 }
 
 /**
@@ -71,7 +70,7 @@ Config.prototype.loadConfig = function(next) {
     this.loadFromOptions.bind(this),
     this.loadFromFiles.bind(this),
     this.loadFromArgv.bind(this),
-    function(cb) { this.config = defaultsDeep(this.fileConfig, this.config); cb(); }.bind(this)
+    function(cb) { this.config = utils.defaultsDeep(this.fileConfig, this.config); cb(); }.bind(this)
   ], next);
 }
 
@@ -80,7 +79,7 @@ Config.prototype.loadFromOptions = function(next) {
 
   var data = _.cloneDeep(this.options.config);
   this.fileContent.opts = data;
-  this.fileConfig = defaultsDeep(_.cloneDeep(data), this.fileConfig);
+  this.fileConfig = utils.defaultsDeep(_.cloneDeep(data), this.fileConfig);
   next();
 }
 
@@ -92,7 +91,7 @@ Config.prototype.loadFromArgv = function(next) {
   _.forOwn(config, function(value, key) { pathval.set(jsonData, key.replace(/\//g, '.'), value); });
 
   this.fileContent.argv = _.cloneDeep(jsonData);
-  this.fileConfig = defaultsDeep(jsonData, this.fileConfig);
+  this.fileConfig = utils.defaultsDeep(jsonData, this.fileConfig);
   next();
 }
 
@@ -154,43 +153,10 @@ Config.prototype.loadFile = function(file, next) {
       // Save the content for later and reload, clone to ensure the defaults
       // Doesn't over-ride
       self.fileContent[file.name] = _.cloneDeep(jsonData);
-      self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
+      self.fileConfig = utils.defaultsDeep(jsonData, self.fileConfig);
       markForExport(file);
       return self.loadAdditionalFiles(file, next);
     });
-<<<<<<< ad97beac9ed1f877b415ff04e3b5cdc7e27bce4c
-
-    function loadAdditionalFiles(file, next) {
-        var files = self.fileContent[file.name].CF_additionalFiles;
-
-        if (!files) return next();
-
-        if (!_.isArray(files)) {
-            files = [files];
-        }
-
-        if (_.isEmpty(files)) return next();
-
-        async.each(files, loadOne, next);
-
-        function loadOne(location, next) {
-            if (path.resolve(location) !== path.normalize(location)) {
-                location = path.resolve(path.dirname(file.path), location);
-            }
-            self.loadFile({
-                path: location,
-                name: file.name + '-' + path.basename(location, path.extname(location)),
-                additional: true
-            }, next);
-        }
-    }
-
-    function markForExport(file) {
-        var exportToEtcd = self.fileContent[file.name].CF_exportToEtcd;
-        var explicit = exportToEtcd !== null && exportToEtcd !== undefined;
-        self.ignoreExport[file.name] = (explicit && !exportToEtcd) || (file.additional && !explicit);
-    }
-=======
   });
 
   function markForExport(file) {
@@ -199,7 +165,6 @@ Config.prototype.loadFile = function(file, next) {
     var explicit = exportFile !== null && exportFile !== undefined;
     self.ignoreExport[file.name] = (explicit && !exportFile) || (file.additional && !explicit);
   }
->>>>>>> ConfigEtcd is a subclass of Config
 
 }
 

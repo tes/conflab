@@ -6,8 +6,8 @@ var Etcd = require('node-etcd');
 var expect = require('expect.js');
 var path = require('path');
 
-var Conflab = require('..');
-var EtcdConflab = require('../lib/etcd');
+var Conflab = require('../Config');
+var EtcdConflab = require('../EtcdConfig');
 
 var fileConfig = require(path.join(__dirname, 'etcd', 'default.json'));
 
