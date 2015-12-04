@@ -39,18 +39,9 @@ Config.prototype.load = function(options, next) {
   this.options = options;
   this.loaded = false;
 
-  var configDir;
-  var pm2Exec = process.env.pm_exec_path;
-  if (pm2Exec) {
-    // If exec path is a file, get the directory of that file
-    configDir = Boolean(path.extname(pm2Exec)) ? path.dirname(pm2Exec) : pm2Exec;
-  } else {
-    configDir = process.cwd();
-  }
-
   // This is the configuration that comes from the application it is included in
   this.libraryPath = options.libraryPath || process.env.CONFLAB_LIBRARY_CONFIG || path.join(__dirname, 'config');
-  this.configPath = options.configPath || process.env.CONFLAB_CONFIG || path.join(configDir, 'config');
+  this.configPath = options.configPath || process.env.CONFLAB_CONFIG || path.join(utils.getRootDir(), 'config');
 
   // Otherwise lets load up
   this.environment = options.env || process.env.CONFLAB_ENV || process.env.NODE_ENV || 'development';

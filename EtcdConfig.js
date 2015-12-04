@@ -3,11 +3,13 @@ var async = require('async');
 var _ = require('lodash');
 var path = require('path');
 var pathval = require('pathval');
-var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 
 var Config = require('./Config');
 var utils = require('./lib/utils');
+
+// Etcd needs a service name to create the key
+var packageJson = require(path.join(utils.getRootDir(), 'package.json'));
 
 /**
  * Copy file content over to keys in etcd
@@ -17,7 +19,7 @@ var utils = require('./lib/utils');
  */
 function EtcdConfig() {
   Config.call(this);
-  this.prefix = '/conflab';
+  this.etcdKeyBase = '/conflab/' + packageJson.name;
   this.heartbeatInterval = 10000;
   this.events = new EventEmitter();
 }
@@ -71,7 +73,7 @@ EtcdConfig.prototype.putFilesInEtcd = function(next) {
 }
 
 /**
- * Update a key on etcd every 10 seconds so that it nows the service is up.
+ * Update a key on etcd every 10 seconds so that it knows the service is up.
  */
 EtcdConfig.prototype.heartbeat = function() {
   var hbKey = this.etcdKeyBase + '/heartbeat/' + this.environment;
@@ -80,40 +82,14 @@ EtcdConfig.prototype.heartbeat = function() {
 }
 
 /**
- * Load config from etcd - fails silently if no etcd config defined in files
+ * Load config from etcd
  */
 EtcdConfig.prototype.loadFromEtcd = function(next) {
   var self = this;
 
-  var parseConfig = function(node, cb) {
-    self.etcdConfig = utils.defaultsDeep(utils.objFromNode(node), self.etcdConfig);
-
-    // Configure the watcher
-    self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
-    self.watcher.on('change', function(config) {
-      var key = config.node.key.replace(self.etcdKey + '/', '');
-      pathval.set(self.etcdConfig, key, config.node.value);
-      self.mergeConfig();
-      self.events.emit('change');
-    });
-
-    cb();
-
-  }
-
   if (!self.etcd) {
-    if (!self.fileConfig.etcd) { return next(); }
-
-    // Etcd needs a service name to create the key
-    var packageJson = path.join(process.cwd(), 'package.json');
-    if (fs.existsSync(packageJson)) {
-      self.etcdKeyBase = self.prefix + '/' + require(packageJson).name;
-      self.etcdKey = self.etcdKeyBase + '/config/' + self.environment;
-    } else {
-      console.log('[CONFLAB] Error: You cant use etcd in a service without a name in the package.json');
-      return next();
-    }
-
+    if (!self.fileConfig.etcd) { return next(new Error('[CONFLAB] Error: Etcd Config not found.')); }
+    self.etcdKey = self.etcdKeyBase + '/config/' + self.environment;
     self.etcd = new Etcd(self.fileConfig.etcd.hosts);
     self.heartbeat();
   }
@@ -123,7 +99,19 @@ EtcdConfig.prototype.loadFromEtcd = function(next) {
 
     self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
       if (err) { return next(err); }
-      parseConfig(config.node, next);
+
+      self.etcdConfig = utils.defaultsDeep(utils.objFromNode(config.node), self.etcdConfig);
+
+      // Configure the watcher
+      self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
+      self.watcher.on('change', function(change) {
+        var key = change.node.key.replace(self.etcdKey + '/', '');
+        pathval.set(self.etcdConfig, key, change.node.value);
+        self.mergeConfig();
+        self.events.emit('change');
+      });
+
+      next();
     });
   });
 }
