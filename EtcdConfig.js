@@ -19,7 +19,7 @@ var packageJson = require(path.join(utils.getRootDir(), 'package.json'));
  */
 function EtcdConfig() {
   Config.call(this);
-  this.etcdKeyBase = '/conflab/' + packageJson.name;
+  this.etcdKeyBase = path.join('/conflab', packageJson.name);
   this.heartbeatInterval = 10000;
   this.events = new EventEmitter();
 }
@@ -53,22 +53,16 @@ EtcdConfig.prototype.mergeConfig = function(next) {
 
 EtcdConfig.prototype.putFilesInEtcd = function(next) {
   var self = this;
-  if (!self.etcd) { return next(); }
 
   var loadFile = function(file, cb) {
     if (self.ignoreExport[file]) { return cb(); }
-    var fileJson = self.fileContent[file];
     var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, file);
-    self.etcd.set(etcdKey, JSON.stringify(fileJson), cb);
-  }
-
-  var loadConfig = function(cb) {
-    var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, 'merged');
-    self.etcd.set(etcdKey, JSON.stringify(self.config), cb);
+    self.etcd.set(etcdKey, JSON.stringify(self.fileContent[file]), cb);
   }
 
   async.each(_.keys(self.fileContent), loadFile, function() {
-    loadConfig(next);
+    var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, 'merged');
+    self.etcd.set(etcdKey, JSON.stringify(self.config), next);
   });
 }
 
@@ -76,7 +70,7 @@ EtcdConfig.prototype.putFilesInEtcd = function(next) {
  * Update a key on etcd every 10 seconds so that it knows the service is up.
  */
 EtcdConfig.prototype.heartbeat = function() {
-  var hbKey = this.etcdKeyBase + '/heartbeat/' + this.environment;
+  var hbKey = path.join(this.etcdKeyBase, 'heartbeat', this.environment);
   this.etcd.set(hbKey, Date.now());
   setTimeout(this.heartbeat.bind(this), this.heartbeatInterval);
 }
@@ -87,23 +81,22 @@ EtcdConfig.prototype.heartbeat = function() {
 EtcdConfig.prototype.loadFromEtcd = function(next) {
   var self = this;
 
-  if (!self.etcd) {
-    if (!self.fileConfig.etcd) { return next(new Error('[CONFLAB] Error: Etcd Config not found.')); }
-    self.etcdKey = self.etcdKeyBase + '/config/' + self.environment;
-    self.etcd = new Etcd(self.fileConfig.etcd.hosts);
-    self.heartbeat();
-  }
+  if (!self.fileConfig.etcd) { return next(new Error('[CONFLAB] Error: Etcd Config not found.')); }
 
-  self.etcd.set(self.etcdKey + '/__', 'Ensure config can be watched', function(err) {
+  self.etcdKey = path.join(self.etcdKeyBase, 'config', self.environment);
+  self.etcd = new Etcd(self.fileConfig.etcd.hosts);
+  self.heartbeat();
+
+  self.etcd.set(path.join(self.etcdKey, '__'), 'Ensure config can be watched', function(err) {
     if (err) { return next(err); }
 
-    self.etcd.get(self.etcdKey, {recursive: true}, function(err, config) {
+    self.etcd.get(self.etcdKey, { recursive: true }, function(err, config) {
       if (err) { return next(err); }
 
       self.etcdConfig = utils.defaultsDeep(utils.objFromNode(config.node), self.etcdConfig);
 
       // Configure the watcher
-      self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
+      self.watcher = self.etcd.watcher(self.etcdKey, null, { recursive: true });
       self.watcher.on('change', function(change) {
         var key = change.node.key.replace(self.etcdKey + '/', '');
         pathval.set(self.etcdConfig, key, change.node.value);
