@@ -52,18 +52,16 @@ EtcdConfig.prototype.mergeConfig = function(next) {
 }
 
 EtcdConfig.prototype.putFilesInEtcd = function(next) {
-  var self = this;
-
   var loadFile = function(file, cb) {
-    if (self.ignoreExport[file]) { return cb(); }
-    var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, file);
-    self.etcd.set(etcdKey, JSON.stringify(self.fileContent[file]), cb);
-  }
+    if (this.ignoreExport[file]) { return cb(); }
+    var etcdKey = path.join(this.etcdKeyBase, 'files', this.environment, file);
+    this.etcd.set(etcdKey, JSON.stringify(this.fileContent[file]), cb);
+  }.bind(this)
 
-  async.each(_.keys(self.fileContent), loadFile, function() {
-    var etcdKey = path.join(self.etcdKeyBase, 'files', self.environment, 'merged');
-    self.etcd.set(etcdKey, JSON.stringify(self.config), next);
-  });
+  async.each(_.keys(this.fileContent), loadFile, function() {
+    var etcdKey = path.join(this.etcdKeyBase, 'files', this.environment, 'merged');
+    this.etcd.set(etcdKey, JSON.stringify(this.config), next);
+  }.bind(this));
 }
 
 /**

@@ -103,60 +103,40 @@ Config.prototype.loadFromFiles = function(next) {
   async.mapSeries(configFiles, this.loadFile.bind(this), next);
 }
 
-Config.prototype.loadAdditionalFiles = function(file, callback) {
-  var self = this;
-  var files = this.fileContent[file.name].CF_additionalFiles;
-  if (_.isEmpty(files)) { return callback(); }
-  async.each(files, loadOne, callback);
-
-  function loadOne(location, cb) {
-    if (path.resolve(location) !== path.normalize(location)) {
-      location = path.resolve(path.dirname(file.path), location);
-    }
-
-    self.loadFile({
-      path: location,
-      name: file.name + '-' + path.basename(location, path.extname(location)),
-      additional: true
-    }, cb);
-  }
-}
-
 /**
  * Load a specific file into the fileConfig
  */
 Config.prototype.loadFile = function(file, next) {
-  var self = this;
+  fs.readFile(file.path, function(err, data) {
+    if (err) { return next(); }
 
-  fs.exists(file.path, function(exists) {
-    if (!exists) { return next(); }
+    var jsonData;
+    try {
+      jsonData = JSON.parse(stripBom(data));
+    } catch (ex) {
+      return next((ex.sourceFile = file.path) && ex);
+    }
 
-    fs.readFile(file.path, function(err, data) {
-      if (err) { return next(); }
+    // Save the content for later and reload, clone to ensure the defaults doesn't over-ride
+    this.fileContent[file.name] = _.cloneDeep(jsonData);
+    this.fileConfig = utils.defaultsDeep(jsonData, this.fileConfig);
 
-      var jsonData;
-      try {
-        jsonData = JSON.parse(stripBom(data));
-      } catch (ex) {
-        return next((ex.sourceFile = file.path) && ex);
-      }
-
-      // Save the content for later and reload, clone to ensure the defaults
-      // Doesn't over-ride
-      self.fileContent[file.name] = _.cloneDeep(jsonData);
-      self.fileConfig = utils.defaultsDeep(jsonData, self.fileConfig);
-      markForExport(file);
-      return self.loadAdditionalFiles(file, next);
-    });
-  });
-
-  function markForExport(file) {
     // TODO: Rename CF_exportToEtcd - should be generic export.
-    var exportFile = self.fileContent[file.name].CF_exportToEtcd;
+    var exportFile = this.fileContent[file.name].CF_exportToEtcd;
     var explicit = exportFile !== null && exportFile !== undefined;
-    self.ignoreExport[file.name] = (explicit && !exportFile) || (file.additional && !explicit);
-  }
+    this.ignoreExport[file.name] = (explicit && !exportFile) || (file.additional && !explicit);
 
+    var files = this.fileContent[file.name].CF_additionalFiles;
+    if (_.isEmpty(files)) { return next(); }
+
+    async.each(files, function loadOne(location, cb) {
+      this.loadFile({
+        path: path.resolve(location) !== path.normalize(location) ? path.resolve(path.dirname(file.path), location) : location,
+        name: file.name + '-' + path.basename(location, path.extname(location)),
+        additional: true
+      }, cb);
+    }.bind(this), next);
+  }.bind(this));
 }
 
 /**
