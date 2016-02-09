@@ -265,7 +265,15 @@ Config.prototype.loadFile = function(file, next) {
 
     function loadAdditionalFiles(file, next) {
         var files = self.fileContent[file.name].CF_additionalFiles;
+
+        if (!files) return next();
+
+        if (!_.isArray(files)) {
+            files = [files];
+        }
+
         if (_.isEmpty(files)) return next();
+
         async.each(files, loadOne, next);
 
         function loadOne(location, next) {
