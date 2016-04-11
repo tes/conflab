@@ -1,5 +1,4 @@
 etcd:
   image: quay.io/coreos/etcd
   ports:
-   - "4001:4001"
-
+   - "2379:2379"

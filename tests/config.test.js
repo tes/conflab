@@ -68,7 +68,7 @@ describe('Config etcd module', function() {
   before(function(done) {
     var etcdConflab = new EtcdConflab();
     etcd = new Etcd(fileConfig.etcd.hosts);
-    etcd.rmdir('/conflab/conflab', { recursive: true }, function(err) {
+    etcd.rmdir('/conflab/conflab', { recursive: true }, function() {
       etcd.set('/conflab/conflab/config/test/ekey1', 'value', function() {
         // Can't load config in here as it seems to screw with mocha
         process.env.CONFLAB_CONFIG = path.join(__dirname, 'etcd');
@@ -104,23 +104,29 @@ describe('Config etcd module', function() {
 
   it('should update if etcd configuration changed', function(done) {
     etcd.set('/conflab/conflab/config/test/ekey1', 'value2', function() {
-      expect(config.ekey1).to.be('value2');
-      expect(config.k1.k2.k3).to.be('Hola');
-      done();
+      setTimeout(function() {
+        expect(config.ekey1).to.be('value2');
+        expect(config.k1.k2.k3).to.be('Hola');
+        done();
+      }, 50)
     });
   });
 
   it('should over-write if etcd added for node in file', function(done) {
     etcd.set('/conflab/conflab/config/test/k1.k2.k3', 'Gracias', function() {
-      expect(config.k1.k2.k3).to.be('Gracias');
-      done();
+      setTimeout(function() {
+        expect(config.k1.k2.k3).to.be('Gracias');
+        done();
+      }, 50);
     });
   });
 
   it('should reset back to file default if etcd removed for node in file', function(done) {
     etcd.rmdir('/conflab/conflab/config/test/k1.k2.k3', { recursive: true }, function() {
-      expect(config.k1.k2.k3).to.be('Hola');
-      done();
+      setTimeout(function() {
+        expect(config.k1.k2.k3).to.be('Hola');
+        done();
+      }, 50)
     });
   });
 });
