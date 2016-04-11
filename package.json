@@ -25,6 +25,9 @@
     "strip-bom": "^1.0.0"
   },
   "devDependencies": {
+    "babel-eslint": "^5.0.0-beta4",
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb": "^1.0.2",
     "expect.js": "^0.3.1",
     "istanbul": "^0.3.2",
     "jshint": "^2.5.7",
