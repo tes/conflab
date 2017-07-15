@@ -1,6 +1,6 @@
 # conflab
 
-A complex configuration library that you should only use if you want to do things that can't be solved by all the simpler heirarchical json configuration libraries like nconf.
+A complex configuration library that you should only use if you want to do things that can't be solved by all the simpler hierarchical json configuration libraries like nconf.
 
 This will load configuration from the following sources, with the later files over-riding any values set in the earlier ones (think of it as getting more specfic as you go down the list).
 
