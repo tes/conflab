@@ -56,14 +56,6 @@ describe('Config file module', function() {
 
     });
 
-    it('should load files from a custom directory if configDir is provided', function(done) {
-        var Conflab = require('..'), conflab = new Conflab();
-        conflab.load({ configPath: '/Users/frampazzo/tes/conflab/tests/custom-directory' }, function(err, conflabConfig) {
-            expect(err).to.be(null);
-            expect(conflabConfig.magic).to.be(42);
-            done();
-        })
-    });
 });
 
 describe('Config etcd module', function() {
@@ -129,4 +121,5 @@ describe('Config etcd module', function() {
             done();
         });
     });
+
 });
