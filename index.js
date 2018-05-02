@@ -11,12 +11,12 @@ var utils = require('./lib/utils');
 var minimist = require('minimist');
 var pathval = require('pathval');
 var stripBom = require('strip-bom');
-var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
-    if (_.isPlainObject(value) && _.isPlainObject(other)) {
-        return _.merge(value, other, deep);
+var mergeDeep = _.partialRight(_.merge, function objectOnlyMerge(left, right) {
+    if (_.isPlainObject(left) && _.isPlainObject(right)) {
+        return _.merge(left, right, objectOnlyMerge);
     }
 
-    return value;
+    return right;
 });
 
 /**
@@ -133,8 +133,8 @@ Config.prototype.mergeConfig = function(next) {
 
     var self = this;
     self.config = {_:{}};
-    self.config = defaultsDeep(self.fileConfig, self.config);
-    self.config = defaultsDeep(self.etcdConfig, self.config);
+    self.config = mergeDeep(self.config, self.fileConfig);
+    self.config = mergeDeep(self.config, self.etcdConfig);
     self.config._.on = self.events.on.bind(self.events);
     self.config._.etcd = self.etcd;
     self.config._.stop = self.watcher ? self.watcher.stop.bind(self.watcher) : function() {};
@@ -162,7 +162,7 @@ Config.prototype.loadFromEtcd = function(next) {
 
     var parseConfig = function(node, cb) {
 
-        self.etcdConfig = defaultsDeep(utils.objFromNode(node), self.etcdConfig);
+        self.etcdConfig = mergeDeep(self.etcdConfig, utils.objFromNode(node));
 
         // Configure the watcher
         self.watcher = self.etcd.watcher(self.etcdKey + '/', null, {recursive: true});
@@ -205,7 +205,7 @@ Config.prototype.loadFromOptions = function(next) {
     if (_.isEmpty(self.options.config)) return next();
     var data = _.cloneDeep(self.options.config);
     self.fileContent.opts = data;
-    self.fileConfig = defaultsDeep(_.cloneDeep(data), self.fileConfig);
+    self.fileConfig = mergeDeep(self.fileConfig, _.cloneDeep(data));
     next();
 }
 
@@ -218,7 +218,7 @@ Config.prototype.loadFromArgv = function(next) {
         pathval.set(jsonData, key.replace(/\//g,'.'), value);
     });
     self.fileContent.argv = _.cloneDeep(jsonData);
-    self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
+    self.fileConfig = mergeDeep(self.fileConfig, jsonData);
     next();
 }
 
@@ -248,23 +248,23 @@ Config.prototype.loadFile = function(file, next) {
 
     var self = this;
     fs.exists(file.path, function (exists) {
-      if(!exists) { return next(); }
-      fs.readFile(file.path, function (err, data) {
-        if(err) { return next(); }
-        var jsonData;
-        try {
+        if(!exists) { return next(); }
+        fs.readFile(file.path, function (err, data) {
+            if(err) { return next(); }
+            var jsonData;
+            try {
 
-            jsonData = JSON.parse(stripBom(data));
-        } catch(ex) {
-            return next((ex.sourceFile = file.path) && ex);
-        }
-        // Save the content for later and reload, clone to ensure the defaults
-        // Doesn't over-ride
-        self.fileContent[file.name] = _.cloneDeep(jsonData);
-        self.fileConfig = defaultsDeep(jsonData, self.fileConfig);
-        markForExport(file);
-        return loadAdditionalFiles(file, next);
-      });
+                jsonData = JSON.parse(stripBom(data));
+            } catch(ex) {
+                return next((ex.sourceFile = file.path) && ex);
+            }
+            // Save the content for later and reload, clone to ensure the defaults
+            // Doesn't over-ride
+            self.fileContent[file.name] = _.cloneDeep(jsonData);
+            self.fileConfig = mergeDeep(self.fileConfig, jsonData);
+            markForExport(file);
+            return loadAdditionalFiles(file, next);
+        });
     });
 
     function loadAdditionalFiles(file, next) {
