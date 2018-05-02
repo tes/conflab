@@ -12,7 +12,11 @@ var minimist = require('minimist');
 var pathval = require('pathval');
 var stripBom = require('strip-bom');
 var defaultsDeep = _.partialRight(_.merge, function deep(value, other) {
-  return _.merge(value, other, deep);
+    if (_.isPlainObject(value) && _.isPlainObject(other)) {
+        return _.merge(value, other, deep);
+    }
+
+    return value;
 });
 
 /**
