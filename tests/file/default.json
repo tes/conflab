@@ -8,5 +8,6 @@
             "k3":"Hola"
         }
     },
+    "arrayKey": [{ "a": "a", "b": "disappear" }, "disappear"],
     "CF_additionalFiles": ["additional.json"]
 }

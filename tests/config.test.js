@@ -43,6 +43,10 @@ describe('Config file module', function() {
         expect(config.k1.a2).to.be('Adios');
     });
 
+    it('should replace arrays rather than merge them', function() {
+      expect(config.arrayKey).to.eql([{ a: 'b' }]);
+    });
+
     it('should provide error with a malformed json', function(done) {
         var old_config = process.env.CONFLAB_CONFIG;
         process.env.CONFLAB_CONFIG = path.join(__dirname, 'badfile');
@@ -53,7 +57,6 @@ describe('Config file module', function() {
             process.env.CONFLAB_CONFIG = old_config;
             done()
         })
-
     });
 
 });

@@ -14,6 +14,9 @@ This will load configuration from the following sources, with the later files ov
 
 So by specifying the majority of your configuration in ./config/default.json, you can then override the defaults in the environment or host specific sections using one or more of the other config locations.
 
+### API Change 0.x.x => 1.x.x
+1. Merging of configuration no longer merges arrays, it replaces them. Old behaviour: `{ a: ['a', 'b'] }` `+` `{ a: ['c'] }` `->` `{ a: ['c', 'b'] }`, new behaviour: `{ a: ['a', 'b'] }` `+` `{ a: ['c'] }` `->` `{ a: ['c'] }`
+
 ### Additional files
 
 Any of the config files can also specify additional files to be loaded after it. This is expressed by setting `CF_additionalFiles` field.
