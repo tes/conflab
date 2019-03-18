@@ -20,11 +20,17 @@ function Config() {
  * A singleton async > sync hack.  If this makes you uncomfortable
  * you should probably use a different library.
  */
-Config.prototype.load = function(options, next) {
+Config.prototype.load = function(options, overrides, next) {
 
     if(!next) {
-        next = options;
-        options = {};
+        if (!overrides){
+            next = options;
+            options = {};
+            overrides = {};
+        } else {
+            next = overrides;
+            options = options || {};
+        }
     } else {
         options = options || {};
     }
@@ -34,6 +40,7 @@ Config.prototype.load = function(options, next) {
 
     self.options = options;
     self.loaded = false;
+    self.overrides = overrides;
 
     var configDir;
     var pm2Exec = process.env.pm_exec_path;
@@ -77,6 +84,7 @@ Config.prototype.loadConfig = function(next) {
         self.loadFromOptions.bind(self),
         self.loadFromFiles.bind(self),
         self.loadFromArgv.bind(self),
+        self.loadFromOverrides.bind(self),
         self.mergeConfig.bind(self)
     ], next);
 }
@@ -102,6 +110,15 @@ Config.prototype.loadFromOptions = function(next) {
     self.fileConfig = mergeDeep(self.fileConfig, _.cloneDeep(data));
     next();
 }
+
+Config.prototype.loadFromOverrides = function(next) {
+    var self = this;
+    if (_.isEmpty(self.overrides.config)) return next();
+    var data = _.cloneDeep(self.overrides.config);
+    self.fileContent.opts = data;
+    self.fileConfig = mergeDeep(self.fileConfig, _.cloneDeep(data));
+    next();
+};
 
 Config.prototype.loadFromArgv = function(next) {
     var self = this;
