@@ -1,6 +1,6 @@
 {
   "name": "conflab",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A configuration library that probably does more than it should.",
   "main": "index.js",
   "repository": {
@@ -8,13 +8,9 @@
     "url": "https://github.com/tes/conflab.git"
   },
   "scripts": {
-    "test": "NODE_ENV=test istanbul cover _mocha -- -R spec tests/* && istanbul check-coverage --statements 80",
+    "test": "NODE_ENV=test nyc --check-coverage --lines 90 mocha",
     "lint": "jshint ."
   },
-  "precommit": [
-    "lint",
-    "test"
-  ],
   "license": "MIT",
   "dependencies": {
     "async": "^0.9.0",
@@ -25,9 +21,9 @@
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "istanbul": "^0.4.5",
-    "jshint": "^2.5.7",
+    "husky": "^1.3.1",
+    "jshint": "^2.10.2",
     "mocha": "^5.2.0",
-    "precommit-hook": "^1.0.7"
+    "nyc": "^13.3.0"
   }
 }
