@@ -15,11 +15,6 @@ describe('Config file module', function() {
             serviceKey4: 'options'
         }
     };
-    var overrides = {
-      config: {
-          serviceKey: 'overrides',
-      }
-    };
 
     before(function(done) {
         process.env.CONFLAB_CONFIG = path.join(__dirname, 'file');
@@ -44,10 +39,15 @@ describe('Config file module', function() {
     });
 
     it('should over-ride based on overrides', function(done) {
-        var configOverride, Conflab = require('..'), conflab = new Conflab();
-        conflab.load(options, overrides, function(err, conflabConfig) {
-            configOverride = conflabConfig;
-            expect(configOverride.serviceKey).to.be('overrides');
+        var options = {
+            overrides: {
+                serviceKey: 'overrides',
+            }
+        };
+        var conflabOverride = new Conflab();
+        conflabOverride.load(options, function(err, conflabConfig) {
+            expect(conflabConfig.sharedDefaultKey).to.be('service');
+            expect(conflabConfig.serviceKey).to.be('overrides');
             done();
         });
     });

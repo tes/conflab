@@ -20,17 +20,11 @@ function Config() {
  * A singleton async > sync hack.  If this makes you uncomfortable
  * you should probably use a different library.
  */
-Config.prototype.load = function(options, overrides, next) {
+Config.prototype.load = function(options, next) {
 
     if(!next) {
-        if (!overrides){
-            next = options;
-            options = {};
-            overrides = {};
-        } else {
-            next = overrides;
-            options = options || {};
-        }
+        next = options;
+        options = {};
     } else {
         options = options || {};
     }
@@ -40,7 +34,6 @@ Config.prototype.load = function(options, overrides, next) {
 
     self.options = options;
     self.loaded = false;
-    self.overrides = overrides;
 
     var configDir;
     var pm2Exec = process.env.pm_exec_path;
@@ -113,10 +106,9 @@ Config.prototype.loadFromOptions = function(next) {
 
 Config.prototype.loadFromOverrides = function(next) {
     var self = this;
-    if (_.isEmpty(self.overrides.config)) return next();
-    var data = _.cloneDeep(self.overrides.config);
-    self.fileContent.opts = data;
-    self.fileConfig = mergeDeep(self.fileConfig, _.cloneDeep(data));
+    if (_.isEmpty(self.options.overrides)) return next();
+    var data = _.cloneDeep(self.options.overrides);
+    self.fileConfig = mergeDeep(self.fileConfig, data);
     next();
 };
 
