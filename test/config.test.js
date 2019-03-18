@@ -35,6 +35,20 @@ describe('Config file module', function() {
         expect(config.serviceKeyEnv).to.be('environment');
     });
 
+    it('should over-ride based on overrides', function(done) {
+        var options = {
+            overrides: {
+                serviceKey: 'overrides',
+            }
+        };
+        var conflabOverride = new Conflab();
+        conflabOverride.load(options, function(err, conflabConfig) {
+            expect(conflabConfig.sharedDefaultKey).to.be('service');
+            expect(conflabConfig.serviceKey).to.be('overrides');
+            done();
+        });
+    });
+
     it('should deal with deep objects as expected', function() {
         expect(config.k1.k2.k3).to.be('Hola');
         expect(config.k1.a2).to.be('Adios');

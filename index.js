@@ -77,6 +77,7 @@ Config.prototype.loadConfig = function(next) {
         self.loadFromOptions.bind(self),
         self.loadFromFiles.bind(self),
         self.loadFromArgv.bind(self),
+        self.loadFromOverrides.bind(self),
         self.mergeConfig.bind(self)
     ], next);
 }
@@ -102,6 +103,14 @@ Config.prototype.loadFromOptions = function(next) {
     self.fileConfig = mergeDeep(self.fileConfig, _.cloneDeep(data));
     next();
 }
+
+Config.prototype.loadFromOverrides = function(next) {
+    var self = this;
+    if (_.isEmpty(self.options.overrides)) return next();
+    var data = _.cloneDeep(self.options.overrides);
+    self.fileConfig = mergeDeep(self.fileConfig, data);
+    next();
+};
 
 Config.prototype.loadFromArgv = function(next) {
     var self = this;
