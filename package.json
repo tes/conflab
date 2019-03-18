@@ -8,7 +8,7 @@
     "url": "https://github.com/tes/conflab.git"
   },
   "scripts": {
-    "test": "NODE_ENV=test nyc --check-coverage --lines 80 mocha",
+    "test": "NODE_ENV=test nyc --check-coverage --lines 90 mocha",
     "lint": "jshint ."
   },
   "precommit": [
