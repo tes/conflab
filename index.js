@@ -8,14 +8,7 @@ var _ = require('lodash');
 var minimist = require('minimist');
 var pathval = require('pathval');
 var stripBom = require('strip-bom');
-
-function mergeDeep (a, b) {
-    return _.mergeWith({}, a, b, function (objectValue, sourceValue) {
-        if (!_.isPlainObject(objectValue) || !_.isPlainObject(sourceValue)) {
-            return sourceValue;
-        }
-    });
-}
+var mergeDeep = require('./merge-deep');
 
 /**
  * Core class - no construction options, all passed via config or env variables
