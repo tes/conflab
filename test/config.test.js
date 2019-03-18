@@ -1,9 +1,6 @@
 'use strict';
 
 var expect = require('expect.js');
-var async = require('async');
-var fs = require('fs');
-var _ = require('lodash');
 var path = require('path');
 
 describe('Config file module', function() {
@@ -51,7 +48,7 @@ describe('Config file module', function() {
         var old_config = process.env.CONFLAB_CONFIG;
         process.env.CONFLAB_CONFIG = path.join(__dirname, 'badfile');
         var Conflab = require('..'), conflab = new Conflab();
-        conflab.load(options, function(err, conflabConfig) {
+        conflab.load(options, function(err) {
             expect(err).to.be.ok()
             expect(err.sourceFile).to.be.ok()
             process.env.CONFLAB_CONFIG = old_config;
