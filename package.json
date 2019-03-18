@@ -8,7 +8,7 @@
     "url": "https://github.com/tes/conflab.git"
   },
   "scripts": {
-    "test": "NODE_ENV=test istanbul cover _mocha -- -R spec tests/* && istanbul check-coverage --statements 80",
+    "test": "NODE_ENV=test nyc --check-coverage --lines 80 mocha -- tests",
     "lint": "jshint ."
   },
   "precommit": [
@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "istanbul": "^0.4.5",
     "jshint": "^2.5.7",
     "mocha": "^5.2.0",
+    "nyc": "^13.3.0",
     "precommit-hook": "^1.0.7"
   }
 }
