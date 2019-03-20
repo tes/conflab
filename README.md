@@ -10,6 +10,7 @@ This will load configuration from the following sources, with the later files ov
 5. ./config/runtime.json
 6. ./config/[your-hostname].json
 7. argv params (--database.host db.example.com)
+8. options.overrides
 
 So by specifying the majority of your configuration in ./config/default.json, you can then override the defaults in the environment or host specific sections using one or more of the other config locations.
 
@@ -41,4 +42,20 @@ var conflab = new Conflab();
 conflab.load(function(err, config) {
     app.listen(config.server.port, config.service.host);
 });
+```
+
+### Defaults and overrides
+Conflab expects an options object which can provide defaults and/or overrides. The defaults can be overriden by any other configuration values stated in files, argv or override. The overrides override any other configuration value. 
+
+#### Example of the options object
+```
+{
+    config:{
+        key1: 'value1',
+        key2: 'value2',
+    },
+    overrides: {
+        key2: 'value3',
+    },
+}
 ```
