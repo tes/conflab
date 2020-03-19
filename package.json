@@ -15,7 +15,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "lodash": "^4.17.15",
-    "minimist": "^1.1.0",
+    "minimist": "^1.2.5",
     "pathval": "^0.1.1",
     "strip-bom": "^1.0.0"
   },
